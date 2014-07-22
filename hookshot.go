@@ -51,6 +51,7 @@ func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if !authorized(r, route.secret) {
 		rr.unauthorized(w, r)
+		return
 	}
 
 	route.handler.ServeHTTP(w, r)

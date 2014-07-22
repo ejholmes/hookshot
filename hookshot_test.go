@@ -57,7 +57,7 @@ func Test_Router(t *testing.T) {
 
 		router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
-			w.Write([]byte("ok"))
+			w.Write([]byte("ok\n"))
 		}))
 
 		resp := httptest.NewRecorder()
@@ -77,10 +77,18 @@ func Test_Router(t *testing.T) {
 			t.Errorf("Code %v: Want %v; Got %v", i, tt.status, resp.Code)
 		}
 
-		if tt.status == 200 {
-			if resp.Body.String() != "ok" {
-				t.Errorf("Body %v: The body was not set")
-			}
+		expectedBody := ""
+		switch tt.status {
+		case 200:
+			expectedBody = "ok\n"
+		case 404:
+			expectedBody = "404 page not found\n"
+		case 403:
+			expectedBody = "The provided signature in the X-Hub-Signature header does not match.\n"
+		}
+
+		if resp.Body.String() != expectedBody {
+			t.Errorf("Body %v: Want %v; Got %v", i, expectedBody, resp.Body.String())
 		}
 	}
 }
