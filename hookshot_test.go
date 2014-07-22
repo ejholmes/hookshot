@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Router(t *testing.T) {
-	router := NewRouter()
+	router := NewRouter("1234")
 
 	router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
@@ -39,12 +39,19 @@ func Test_Router(t *testing.T) {
 			signature: "invalid",
 			status:    403,
 		},
+		{
+			event:     "deployment",
+			body:      `{"event":"data"}`,
+			signature: "sha1=ade133892a181fba3a21c163cd5cbc3f5f8e915c",
+			status:    200,
+		},
 	}
 
 	for i, tt := range tests {
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/", bytes.NewReader([]byte(tt.body)))
 		req.Header.Set("X-GitHub-Event", tt.event)
+		req.Header.Set("X-Hub-Signature", tt.signature)
 
 		router.ServeHTTP(resp, req)
 

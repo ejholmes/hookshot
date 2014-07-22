@@ -22,16 +22,20 @@ type Router struct {
 	UnauthorizedHandler http.Handler
 
 	routes routes
+	secret string
 }
 
 // NewRouter returns a new Router.
-func NewRouter() *Router {
-	return &Router{routes: make(routes)}
+func NewRouter(secret string) *Router {
+	return &Router{
+		routes: make(routes),
+		secret: secret,
+	}
 }
 
 // Handle maps a github event to an http.Handler.
 func (rr *Router) Handle(event string, h http.Handler) {
-	route := &route{event: event, handler: h}
+	route := &route{event: event, handler: h, secret: rr.secret}
 	rr.routes[event] = route
 }
 
@@ -88,7 +92,7 @@ func authorized(r *http.Request, secret string) bool {
 	if err != nil {
 		return false
 	}
-	return r.Header.Get(HeaderSignature) == "sha1"+Signature(raw, secret)
+	return r.Header.Get(HeaderSignature) == "sha1="+Signature(raw, secret)
 }
 
 // unauthorized is the default UnauthorizedHandler.
