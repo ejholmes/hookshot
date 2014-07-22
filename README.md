@@ -1,4 +1,4 @@
-# [Hookshot](https://github.com/ejholmes/hookshot)
+# [Hookshot](https://github.com/ejholmes/hookshot) [![Build Status](https://travis-ci.org/ejholmes/hookshot.svg?branch=master)](https://travis-ci.org/ejholmes/hookshot)
 
 [Godoc](http://godoc.org/github.com/ejholmes/hookshot)
 
