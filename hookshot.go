@@ -18,16 +18,15 @@ const (
 
 // Router demultiplexes github hooks.
 type Router struct {
-	NotFoundHandler http.Handler
-	routes          routes
+	NotFoundHandler     http.Handler
+	UnauthorizedHandler http.Handler
+
+	routes routes
 }
 
 // NewRouter returns a new Router.
 func NewRouter() *Router {
-	return &Router{
-		routes:          make(routes),
-		NotFoundHandler: http.HandlerFunc(http.NotFound),
-	}
+	return &Router{routes: make(routes)}
 }
 
 // Handle maps a github event to an http.Handler.
@@ -42,13 +41,27 @@ func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	route := rr.routes[event]
 	if route == nil {
-		rr.NotFoundHandler.ServeHTTP(w, r)
+		rr.notFound(w, r)
 		return
 	}
 
 	if !authorized(r, route.secret) {
-		http.Error(w, "The provided signature in the "+HeaderSignature+" header does not match.", 403)
+		rr.unauthorized(w, r)
 	}
+}
+
+func (rr *Router) notFound(w http.ResponseWriter, r *http.Request) {
+	if rr.NotFoundHandler == nil {
+		rr.NotFoundHandler = http.HandlerFunc(http.NotFound)
+	}
+	rr.NotFoundHandler.ServeHTTP(w, r)
+}
+
+func (rr *Router) unauthorized(w http.ResponseWriter, r *http.Request) {
+	if rr.UnauthorizedHandler == nil {
+		rr.UnauthorizedHandler = http.HandlerFunc(unauthorized)
+	}
+	rr.UnauthorizedHandler.ServeHTTP(w, r)
 }
 
 // route represents the http.Handler for a github event.
@@ -76,4 +89,9 @@ func authorized(r *http.Request, secret string) bool {
 		return false
 	}
 	return r.Header.Get(HeaderSignature) == "sha1"+Signature(raw, secret)
+}
+
+// unauthorized is the default UnauthorizedHandler.
+func unauthorized(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "The provided signature in the "+HeaderSignature+" header does not match.", 403)
 }
