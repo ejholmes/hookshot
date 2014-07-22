@@ -92,6 +92,11 @@ func authorized(r *http.Request, secret string) bool {
 	if err != nil {
 		return false
 	}
+
+	if len(r.Header[HeaderSignature]) == 0 {
+		return true
+	}
+
 	return r.Header.Get(HeaderSignature) == "sha1="+Signature(raw, secret)
 }
 
