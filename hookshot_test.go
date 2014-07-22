@@ -57,6 +57,7 @@ func Test_Router(t *testing.T) {
 
 		router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(200)
+			w.Write([]byte("ok"))
 		}))
 
 		resp := httptest.NewRecorder()
@@ -74,6 +75,12 @@ func Test_Router(t *testing.T) {
 
 		if resp.Code != tt.status {
 			t.Errorf("Code %v: Want %v; Got %v", i, tt.status, resp.Code)
+		}
+
+		if tt.status == 200 {
+			if resp.Body.String() != "ok" {
+				t.Errorf("Body %v: The body was not set")
+			}
 		}
 	}
 }
