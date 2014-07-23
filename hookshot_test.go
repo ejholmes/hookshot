@@ -2,10 +2,15 @@ package hookshot
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+type payload struct {
+	event string `json:"event"`
+}
 
 func Test_Router(t *testing.T) {
 	tests := []struct {
@@ -56,6 +61,13 @@ func Test_Router(t *testing.T) {
 		router := NewRouter(tt.secret)
 
 		router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var p payload
+			err := json.NewDecoder(r.Body).Decode(&p)
+
+			if err != nil {
+				t.Fatalf("Could not read from request body: %v", err)
+			}
+
 			w.WriteHeader(200)
 			w.Write([]byte("ok\n"))
 		}))

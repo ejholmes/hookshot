@@ -1,6 +1,7 @@
 package hookshot
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
 	"fmt"
@@ -95,6 +96,7 @@ func authorized(r *http.Request, secret string) bool {
 	if err != nil {
 		return false
 	}
+	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
 
 	if len(r.Header[HeaderSignature]) == 0 {
 		return true
