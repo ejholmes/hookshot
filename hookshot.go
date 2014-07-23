@@ -35,41 +35,41 @@ func NewRouter(secret string) *Router {
 }
 
 // Handle maps a github event to an http.Handler.
-func (rr *Router) Handle(event string, h http.Handler) {
-	route := &route{event: event, handler: h, secret: rr.secret}
-	rr.routes[event] = route
+func (r *Router) Handle(event string, h http.Handler) {
+	route := &route{event: event, handler: h, secret: r.secret}
+	r.routes[event] = route
 }
 
 // ServeHTTP implements the http.Handler interface.
-func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	event := r.Header.Get(HeaderEvent)
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	event := req.Header.Get(HeaderEvent)
 
-	route := rr.routes[event]
+	route := r.routes[event]
 	if route == nil {
-		rr.notFound(w, r)
+		r.notFound(w, req)
 		return
 	}
 
-	if !authorized(r, route.secret) {
-		rr.unauthorized(w, r)
+	if !authorized(req, route.secret) {
+		r.unauthorized(w, req)
 		return
 	}
 
-	route.handler.ServeHTTP(w, r)
+	route.handler.ServeHTTP(w, req)
 }
 
-func (rr *Router) notFound(w http.ResponseWriter, r *http.Request) {
-	if rr.NotFoundHandler == nil {
-		rr.NotFoundHandler = http.HandlerFunc(http.NotFound)
+func (r *Router) notFound(w http.ResponseWriter, req *http.Request) {
+	if r.NotFoundHandler == nil {
+		r.NotFoundHandler = http.HandlerFunc(http.NotFound)
 	}
-	rr.NotFoundHandler.ServeHTTP(w, r)
+	r.NotFoundHandler.ServeHTTP(w, req)
 }
 
-func (rr *Router) unauthorized(w http.ResponseWriter, r *http.Request) {
-	if rr.UnauthorizedHandler == nil {
-		rr.UnauthorizedHandler = http.HandlerFunc(unauthorized)
+func (r *Router) unauthorized(w http.ResponseWriter, req *http.Request) {
+	if r.UnauthorizedHandler == nil {
+		r.UnauthorizedHandler = http.HandlerFunc(unauthorized)
 	}
-	rr.UnauthorizedHandler.ServeHTTP(w, r)
+	r.UnauthorizedHandler.ServeHTTP(w, req)
 }
 
 // route represents the http.Handler for a github event.
@@ -92,8 +92,8 @@ func Signature(in []byte, secret string) string {
 // authorized checks that the calculated signature for the request matches the provided signature in
 // the request headers.
 func authorized(r *http.Request, secret string) bool {
-	raw, err := ioutil.ReadAll(r.Body)
-	if err != nil {
+	raw, er := ioutil.ReadAll(r.Body)
+	if er != nil {
 		return false
 	}
 	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
