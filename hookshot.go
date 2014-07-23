@@ -103,6 +103,10 @@ func authorized(r *http.Request, secret string) bool {
 	if er != nil {
 		return false
 	}
+
+	// Since we're reading the request from the network, r.Body will return EOF if any
+	// downstream http.Handler attempts to read it. We set it to a new io.ReadCloser
+	// that will read from the bytes in memory.
 	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
 
 	if len(r.Header[HeaderSignature]) == 0 {
