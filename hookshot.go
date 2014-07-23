@@ -35,9 +35,10 @@ func NewRouter(secret string) *Router {
 }
 
 // Handle maps a github event to an http.Handler.
-func (r *Router) Handle(event string, h http.Handler) {
-	route := &route{event: event, handler: h, secret: r.secret}
+func (r *Router) Handle(event string, h http.Handler) *Route {
+	route := &Route{Event: event, Handler: h, Secret: r.secret}
 	r.routes[event] = route
+	return route
 }
 
 // ServeHTTP implements the http.Handler interface.
@@ -50,12 +51,12 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !authorized(req, route.secret) {
+	if !authorized(req, route.Secret) {
 		r.unauthorized(w, req)
 		return
 	}
 
-	route.handler.ServeHTTP(w, req)
+	route.ServeHTTP(w, req)
 }
 
 func (r *Router) notFound(w http.ResponseWriter, req *http.Request) {
@@ -72,15 +73,20 @@ func (r *Router) unauthorized(w http.ResponseWriter, req *http.Request) {
 	r.UnauthorizedHandler.ServeHTTP(w, req)
 }
 
-// route represents the http.Handler for a github event.
-type route struct {
-	secret  string
-	event   string
-	handler http.Handler
+// Route represents the http.Handler for a github event.
+type Route struct {
+	Secret  string
+	Event   string
+	Handler http.Handler
 }
 
-// routes maps a github event to a route.
-type routes map[string]*route
+// ServeHTTP implements the http.Handler interface.
+func (r *Route) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r.Handler.ServeHTTP(w, req)
+}
+
+// routes maps a github event to a Route.
+type routes map[string]*Route
 
 // Signature calculates the SHA1 HMAC signature of in using the secret.
 func Signature(in []byte, secret string) string {
