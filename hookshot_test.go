@@ -57,7 +57,7 @@ func Test_Router(t *testing.T) {
 		},
 	}
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		router := NewRouter(tt.secret)
 
 		router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func Test_Router(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		if resp.Code != tt.status {
-			t.Errorf("Code %v: Want %v; Got %v", i, tt.status, resp.Code)
+			t.Errorf("resp.Code = %v; want %v", resp.Code, tt.status)
 		}
 
 		expectedBody := ""
@@ -100,7 +100,7 @@ func Test_Router(t *testing.T) {
 		}
 
 		if resp.Body.String() != expectedBody {
-			t.Errorf("Body %v: Want %v; Got %v", i, expectedBody, resp.Body.String())
+			t.Errorf("resp.Body = %q; want %q", resp.Body.String(), expectedBody)
 		}
 	}
 }
@@ -119,11 +119,11 @@ func Test_Signature(t *testing.T) {
 		},
 	}
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		signature := Signature([]byte(tt.in), tt.secret)
 
 		if signature != tt.signature {
-			t.Errorf("%v: Want %v; Got %v", i, tt.signature, signature)
+			t.Errorf("Signature(%q, %q) => %q; want %q", tt.in, tt.secret, signature, tt.signature)
 		}
 	}
 }
