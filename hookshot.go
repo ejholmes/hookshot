@@ -89,10 +89,14 @@ func (r *Route) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // routes maps a github event to a Route.
 type routes map[string]*Route
 
-// Signature calculates the SHA1 HMAC signature of in using the secret.
-func Signature(in []byte, secret string) string {
+// Signature calculates the SHA1 HMAC signature of body, signed by the secret.
+//
+// When github-services makes a POST request, it includes a SHA1 HMAC signature
+// of the request body, signed with the secret provided in the webhook configuration.
+// See https://github.com/github/github-services/blob/f3bb3dd780feb6318c42b2db064ed6d481b70a1f/lib/service/http_helper.rb#L74-L78.
+func Signature(body []byte, secret string) string {
 	mac := hmac.New(sha1.New, []byte(secret))
-	mac.Write(in)
+	mac.Write(body)
 	return fmt.Sprintf("%x", mac.Sum(nil))
 }
 
