@@ -36,7 +36,7 @@ func NewRouter(secret string) *Router {
 
 // Handle maps a github event to an http.Handler.
 func (r *Router) Handle(event string, h http.Handler) *Route {
-	route := &Route{Event: event, Handler: h, Secret: r.secret}
+	route := &Route{Secret: r.secret, event: event, handler: h}
 	r.routes[event] = route
 	return route
 }
@@ -75,14 +75,15 @@ func (r *Router) unauthorized(w http.ResponseWriter, req *http.Request) {
 
 // Route represents the http.Handler for a github event.
 type Route struct {
-	Secret  string
-	Event   string
-	Handler http.Handler
+	Secret string
+
+	handler http.Handler
+	event   string
 }
 
 // ServeHTTP implements the http.Handler interface.
 func (r *Route) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.Handler.ServeHTTP(w, req)
+	r.handler.ServeHTTP(w, req)
 }
 
 // routes maps a github event to a Route.
