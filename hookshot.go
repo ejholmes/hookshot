@@ -1,3 +1,9 @@
+// Package hookshot is a router that de-multiplexes and authorizes github webhooks.
+//
+//	r := hookshot.NewRouter("secret")
+//
+//	r.Handle("deployment", DeploymentHandler)
+//	r.Handle("deployment_status", DeploymentStatusHandler)
 package hookshot
 
 import (
