@@ -87,7 +87,7 @@ func Test_Router(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		if resp.Code != tt.status {
-			t.Errorf("resp.Code = %v; want %v", resp.Code, tt.status)
+			t.Errorf("resp.Code => %v; want %v", resp.Code, tt.status)
 		}
 
 		expectedBody := ""
@@ -101,7 +101,11 @@ func Test_Router(t *testing.T) {
 		}
 
 		if resp.Body.String() != expectedBody {
-			t.Errorf("resp.Body = %q; want %q", resp.Body.String(), expectedBody)
+			t.Errorf("resp.Body => %q; want %q", resp.Body.String(), expectedBody)
+		}
+
+		if resp.Header().Get("X-Calculated-Signature") != "" {
+			t.Errorf("resp.Header[X-Calculated-Signature] => %q; want %q", resp.Header().Get("X-Calculated-Signature"), "")
 		}
 	}
 }
