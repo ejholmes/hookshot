@@ -3,6 +3,7 @@ package hookshot
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -126,4 +127,21 @@ func Test_Signature(t *testing.T) {
 			t.Errorf("Signature(%q, %q) => %q; want %q", tt.in, tt.secret, signature, tt.signature)
 		}
 	}
+}
+
+func Example_HandleFunc() {
+	r := NewRouter("secret")
+	r.HandleFunc("ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`pong`))
+	})
+
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "", bytes.NewBufferString(`{"data":"foo"}`))
+	req.Header.Set("X-GitHub-Event", "ping")
+	req.Header.Set("X-Hub-Signature", "sha1=b3dc4e9a2d727ee1e60bb6828c2dcef88b5ec970")
+
+	r.ServeHTTP(res, req)
+
+	fmt.Print(res.Body)
+	// Output: pong
 }

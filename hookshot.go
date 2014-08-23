@@ -20,8 +20,19 @@ const (
 
 // Router demultiplexes github hooks.
 type Router struct {
-	NotFoundHandler     http.Handler
+	// NotFoundHandler is called when a handler is not found for a given GitHub event.
+	NotFoundHandler http.Handler
+
+	// UnauthorizedHandler is called when the calculated signature does not match the
+	// provided signature in the X-Hub-Signature header.
 	UnauthorizedHandler http.Handler
+
+	// SetHeader controls what happens when the X-Hub-Signature header value does
+	// not match the calculated signature. Setting this value to true will set
+	// the X-Calculated-Signature header in the response.
+	//
+	// It's recommended that you only enable this for debugging purposes.
+	SetHeader bool
 
 	routes routes
 	secret string
@@ -57,7 +68,13 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !authorized(req, route.Secret) {
+	sig, ok := authorized(req, route.Secret)
+
+	if r.SetHeader {
+		w.Header().Set("X-Calculated-Signature", sig)
+	}
+
+	if !ok {
 		r.unauthorized(w, req)
 		return
 	}
@@ -108,10 +125,10 @@ func Signature(body []byte, secret string) string {
 
 // authorized checks that the calculated signature for the request matches the provided signature in
 // the request headers.
-func authorized(r *http.Request, secret string) bool {
+func authorized(r *http.Request, secret string) (string, bool) {
 	raw, er := ioutil.ReadAll(r.Body)
 	if er != nil {
-		return false
+		return "", false
 	}
 
 	// Since we're reading the request from the network, r.Body will return EOF if any
@@ -120,10 +137,12 @@ func authorized(r *http.Request, secret string) bool {
 	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
 
 	if len(r.Header[HeaderSignature]) == 0 {
-		return true
+		return "", true
 	}
 
-	return r.Header.Get(HeaderSignature) == "sha1="+Signature(raw, secret)
+	sig := "sha1=" + Signature(raw, secret)
+
+	return sig, r.Header.Get(HeaderSignature) == sig
 }
 
 // unauthorized is the default UnauthorizedHandler.
