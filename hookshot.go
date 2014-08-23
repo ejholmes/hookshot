@@ -99,7 +99,7 @@ type routes map[string]*Route
 //
 // When github-services makes a POST request, it includes a SHA1 HMAC signature
 // of the request body, signed with the secret provided in the webhook configuration.
-// See https://github.com/github/github-services/blob/f3bb3dd780feb6318c42b2db064ed6d481b70a1f/lib/service/http_helper.rb#L74-L78.
+// See http://goo.gl/Oe4WwR.
 func Signature(body []byte, secret string) string {
 	mac := hmac.New(sha1.New, []byte(secret))
 	mac.Write(body)
