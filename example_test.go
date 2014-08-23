@@ -17,7 +17,7 @@ func HandlePing(w http.ResponseWriter, r *http.Request) {
 
 func Example() {
 	r := hookshot.NewRouter()
-	r.Handle("ping", HandleDeployment)
+	r.HandleFunc("ping", HandleDeployment)
 
 	http.ListenAndServe(":0", r)
 }

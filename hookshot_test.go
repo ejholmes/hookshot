@@ -60,7 +60,7 @@ func Test_Router(t *testing.T) {
 	for _, tt := range tests {
 		router := NewRouter(tt.secret)
 
-		router.Handle("deployment", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.HandleFunc("deployment", func(w http.ResponseWriter, r *http.Request) {
 			var p payload
 			err := json.NewDecoder(r.Body).Decode(&p)
 
@@ -70,7 +70,7 @@ func Test_Router(t *testing.T) {
 
 			w.WriteHeader(200)
 			w.Write([]byte("ok\n"))
-		}))
+		})
 
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/", bytes.NewReader([]byte(tt.body)))

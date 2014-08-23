@@ -1,9 +1,4 @@
 // Package hookshot is a router that de-multiplexes and authorizes github webhooks.
-//
-//	r := hookshot.NewRouter("secret")
-//
-//	r.Handle("deployment", DeploymentHandler)
-//	r.Handle("deployment_status", DeploymentStatusHandler)
 package hookshot
 
 import (
@@ -45,6 +40,11 @@ func (r *Router) Handle(event string, h http.Handler) *Route {
 	route := &Route{Secret: r.secret, event: event, handler: h}
 	r.routes[event] = route
 	return route
+}
+
+// HandleFunc maps a github event to an http.HandlerFunc.
+func (r *Router) HandleFunc(event string, fn func(http.ResponseWriter, *http.Request)) *Route {
+	return r.Handle(event, http.HandlerFunc(fn))
 }
 
 // ServeHTTP implements the http.Handler interface.
