@@ -129,7 +129,7 @@ func Test_Signature(t *testing.T) {
 	}
 }
 
-func Example_HandleFunc() {
+func Example_Router_HandleFunc() {
 	r := NewRouter("secret")
 	r.HandleFunc("ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`pong`))
