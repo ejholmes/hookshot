@@ -19,5 +19,5 @@ func Example() {
 	r := hookshot.NewRouter()
 	r.HandleFunc("ping", HandleDeployment)
 
-	http.ListenAndServe(":0", r)
+	http.ListenAndServe(":8080", r)
 }
