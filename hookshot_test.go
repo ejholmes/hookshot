@@ -17,7 +17,7 @@ type payload struct {
 	event string `json:"event"`
 }
 
-func Test_Router(t *testing.T) {
+func TestRouter(t *testing.T) {
 	tests := []struct {
 		secret    string
 		event     string
@@ -114,7 +114,7 @@ func Test_Router(t *testing.T) {
 	}
 }
 
-func Test_Signature(t *testing.T) {
+func TestSignature(t *testing.T) {
 	tests := []struct {
 		in     string
 		secret string

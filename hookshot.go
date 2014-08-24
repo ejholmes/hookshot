@@ -22,9 +22,19 @@ const (
 	HeaderSignature = "X-Hub-Signature"
 )
 
+var (
+	// DefaultNotFoundHandler is the default NotFoundHandler for a Router instance.
+	DefaultNotFoundHandler = http.HandlerFunc(http.NotFound)
+
+	// DefaultUnauthorizedHandler is the default UnauthorizedHandler for a Router
+	// instance.
+	DefaultUnauthorizedHandler = http.HandlerFunc(unauthorized)
+)
+
 // Router demultiplexes github hooks.
 type Router struct {
 	// NotFoundHandler is called when a handler is not found for a given GitHub event.
+	// The nil value for NotFoundHandler
 	NotFoundHandler http.Handler
 
 	// UnauthorizedHandler is called when the calculated signature does not match the
@@ -88,15 +98,17 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) notFound(w http.ResponseWriter, req *http.Request) {
 	if r.NotFoundHandler == nil {
-		r.NotFoundHandler = http.HandlerFunc(http.NotFound)
+		r.NotFoundHandler = DefaultNotFoundHandler
 	}
+
 	r.NotFoundHandler.ServeHTTP(w, req)
 }
 
 func (r *Router) unauthorized(w http.ResponseWriter, req *http.Request) {
 	if r.UnauthorizedHandler == nil {
-		r.UnauthorizedHandler = http.HandlerFunc(unauthorized)
+		r.UnauthorizedHandler = DefaultUnauthorizedHandler
 	}
+
 	r.UnauthorizedHandler.ServeHTTP(w, req)
 }
 
