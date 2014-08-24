@@ -1,3 +1,7 @@
+// Copyright 2014 Eric Holmes.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Package hookshot is a router that de-multiplexes and authorizes github webhooks.
 package hookshot
 
