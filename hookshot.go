@@ -27,7 +27,7 @@ var (
 	DefaultNotFoundHandler = http.HandlerFunc(http.NotFound)
 
 	// DefaultUnauthorizedHandler is the default UnauthorizedHandler for a Router
-	// instance.
+	// instance, which responds with a 403 status and a plain text body.
 	DefaultUnauthorizedHandler = http.HandlerFunc(unauthorized)
 )
 
