@@ -7,7 +7,7 @@ package hookshot_test
 import (
 	"net/http"
 
-	"github.com/tugbt/hookshot"
+	"github.com/ejholmes/hookshot"
 )
 
 func HandlePing(w http.ResponseWriter, r *http.Request) {
