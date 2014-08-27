@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
+	"crypto/subtle"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -157,8 +158,16 @@ func authorized(r *http.Request, secret string) (string, bool) {
 	}
 
 	sig := "sha1=" + Signature(raw, secret)
+	return sig, compareStrings(r.Header.Get(HeaderSignature), sig)
+}
 
-	return sig, r.Header.Get(HeaderSignature) == sig
+// compareStrings compares two strings in constant time.
+func compareStrings(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }
 
 // unauthorized is the default UnauthorizedHandler.
