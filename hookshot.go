@@ -153,7 +153,7 @@ func authorized(r *http.Request, secret string) (string, bool) {
 	// that will read from the bytes in memory.
 	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
 
-	if len(r.Header[HeaderSignature]) == 0 {
+	if len(secret) == 0 && len(r.Header[HeaderSignature]) == 0 {
 		return "", true
 	}
 

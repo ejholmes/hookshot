@@ -55,6 +55,12 @@ func TestRouter(t *testing.T) {
 			status:    200,
 		},
 		{
+			secret: "1234",
+			event:  "deployment",
+			body:   `{"event":"data"}`,
+			status: 403,
+		},
+		{
 			secret: "",
 			event:  "deployment",
 			body:   `{"event":"data"}`,
