@@ -62,13 +62,6 @@ func (r *Router) HandleFunc(event string, fn func(http.ResponseWriter, *http.Req
 	r.Handle(event, http.HandlerFunc(fn))
 }
 
-// HandleSecret maps a github event to a SecretHandler.
-func (r *Router) HandleSecret(event string, secret string, h http.Handler) *SecretHandler {
-	route := &SecretHandler{Secret: secret, Handler: h}
-	r.Handle(event, route)
-	return route
-}
-
 // ServeHTTP implements the http.Handler interface to route a request to an
 // appropriate http.Handler, based on the value of the X-GitHub-Event header.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -91,6 +84,9 @@ func (r *Router) notFound(w http.ResponseWriter, req *http.Request) {
 	r.NotFoundHandler.ServeHTTP(w, req)
 }
 
+// routes maps a github event to an http.Handler.
+type routes map[string]http.Handler
+
 // SecretHandler is an http.Handler that will verify the authenticity of the
 // request.
 type SecretHandler struct {
@@ -111,6 +107,12 @@ type SecretHandler struct {
 	// Unauthorized is the http.Handler that will be called if the request
 	// is not authorized.
 	Unauthorized http.Handler
+}
+
+// Authorize wraps an http.Handler to verify the authenticity of the request
+// using the provided secret.
+func Authorize(h http.Handler, secret string) *SecretHandler {
+	return &SecretHandler{Handler: h, Secret: secret}
 }
 
 // ServeHTTP implements the http.Handler interface.
@@ -135,9 +137,6 @@ func (h *SecretHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	h.Handler.ServeHTTP(w, req)
 }
-
-// routes maps a github event to an http.Handler.
-type routes map[string]http.Handler
 
 // Signature calculates the SHA1 HMAC signature of body, signed by the secret.
 //
