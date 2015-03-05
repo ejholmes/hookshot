@@ -38,10 +38,6 @@ type Router struct {
 	// The nil value for NotFoundHandler
 	NotFoundHandler http.Handler
 
-	// UnauthorizedHandler is called when the calculated signature does not match the
-	// provided signature in the X-Hub-Signature header.
-	UnauthorizedHandler http.Handler
-
 	routes routes
 }
 
