@@ -17,7 +17,7 @@ type payload struct {
 	event string `json:"event"`
 }
 
-func TestRouter(t *testing.T) {
+func TestRouterAuthorized(t *testing.T) {
 	tests := []struct {
 		secret    string
 		event     string
@@ -69,7 +69,7 @@ func TestRouter(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		router := NewRouter(tt.secret)
+		router := NewRouterWithSecret(tt.secret)
 
 		router.HandleFunc("deployment", func(w http.ResponseWriter, r *http.Request) {
 			var p payload
@@ -144,7 +144,7 @@ func TestSignature(t *testing.T) {
 }
 
 func ExampleRouterHandleFunc() {
-	r := NewRouter("secret")
+	r := NewRouterWithSecret("secret")
 	r.HandleFunc("ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`pong`))
 	})

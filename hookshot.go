@@ -54,7 +54,15 @@ type Router struct {
 }
 
 // NewRouter returns a new Router.
-func NewRouter(secret string) *Router {
+func NewRouter() *Router {
+	return &Router{
+		routes: make(routes),
+	}
+}
+
+// NewRouterWithSecret returns a new Router that will automatically verify the
+// X-Hub-Signature for each route.
+func NewRouterWithSecret(secret string) *Router {
 	return &Router{
 		routes: make(routes),
 		secret: secret,
@@ -83,15 +91,18 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sig, ok := IsAuthorized(req, route.Secret)
+	// If a secret is provided, ensure that the request is verified.
+	if r.secret != "" {
+		sig, ok := IsAuthorized(req, route.Secret)
 
-	if r.SetHeader {
-		w.Header().Set("X-Calculated-Signature", sig)
-	}
+		if r.SetHeader {
+			w.Header().Set("X-Calculated-Signature", sig)
+		}
 
-	if !ok {
-		r.unauthorized(w, req)
-		return
+		if !ok {
+			r.unauthorized(w, req)
+			return
+		}
 	}
 
 	route.ServeHTTP(w, req)
@@ -154,10 +165,6 @@ func IsAuthorized(r *http.Request, secret string) (string, bool) {
 	// downstream http.Handler attempts to read it. We set it to a new io.ReadCloser
 	// that will read from the bytes in memory.
 	r.Body = ioutil.NopCloser(bytes.NewReader(raw))
-
-	if len(secret) == 0 && len(r.Header[HeaderSignature]) == 0 {
-		return "", true
-	}
 
 	sig := "sha1=" + Signature(raw, secret)
 	return sig, compareStrings(r.Header.Get(HeaderSignature), sig)
