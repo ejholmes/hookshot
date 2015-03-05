@@ -143,7 +143,7 @@ func TestSignature(t *testing.T) {
 	}
 }
 
-func ExampleRouter_HandleFunc() {
+func ExampleRouterHandleFunc() {
 	r := NewRouter("secret")
 	r.HandleFunc("ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`pong`))
@@ -158,4 +158,24 @@ func ExampleRouter_HandleFunc() {
 
 	fmt.Print(res.Body)
 	// Output: pong
+}
+
+func ExampleIsAuthorized() {
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := IsAuthorized(r, "secret"); !ok {
+			http.Error(w, "The provided signature in the "+HeaderSignature+" header does not match.", 403)
+			return
+		}
+
+		w.Write([]byte(`Ok`))
+	})
+
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "", bytes.NewBufferString(`{"data":"foo"}`))
+	req.Header.Set("X-Hub-Signature", "sha1=b3dc4e9a2d727ee1e60bb6828c2dcef88b5ec970")
+
+	h.ServeHTTP(res, req)
+
+	fmt.Print(res.Body)
+	// Output: Ok
 }

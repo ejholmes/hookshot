@@ -83,7 +83,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sig, ok := authorized(req, route.Secret)
+	sig, ok := IsAuthorized(req, route.Secret)
 
 	if r.SetHeader {
 		w.Header().Set("X-Calculated-Signature", sig)
@@ -140,9 +140,11 @@ func Signature(body []byte, secret string) string {
 	return fmt.Sprintf("%x", mac.Sum(nil))
 }
 
-// authorized checks that the calculated signature for the request matches the provided signature in
-// the request headers.
-func authorized(r *http.Request, secret string) (string, bool) {
+// IsAuthorized checks that the calculated signature for the request matches the provided signature in
+// the request headers. Returns the calculated signature, and a boolean value
+// indicating whether or not the calculated signature matches the
+// X-Hub-Signature value.
+func IsAuthorized(r *http.Request, secret string) (string, bool) {
 	raw, er := ioutil.ReadAll(r.Body)
 	if er != nil {
 		return "", false
