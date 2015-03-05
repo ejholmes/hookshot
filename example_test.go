@@ -16,7 +16,7 @@ func HandlePing(w http.ResponseWriter, r *http.Request) {
 }
 
 func Example() {
-	r := hookshot.NewRouterWithSecret("secret")
+	r := hookshot.NewRouter()
 	r.HandleFunc("ping", HandlePing)
 
 	http.ListenAndServe(":8080", r)

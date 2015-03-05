@@ -42,15 +42,7 @@ type Router struct {
 	// provided signature in the X-Hub-Signature header.
 	UnauthorizedHandler http.Handler
 
-	// SetHeader controls what happens when the X-Hub-Signature header value does
-	// not match the calculated signature. Setting this value to true will set
-	// the X-Calculated-Signature header in the response.
-	//
-	// It's recommended that you only enable this for debugging purposes.
-	SetHeader bool
-
 	routes routes
-	secret string
 }
 
 // NewRouter returns a new Router.
@@ -60,28 +52,25 @@ func NewRouter() *Router {
 	}
 }
 
-// NewRouterWithSecret returns a new Router that will automatically verify the
-// X-Hub-Signature for each route.
-func NewRouterWithSecret(secret string) *Router {
-	return &Router{
-		routes: make(routes),
-		secret: secret,
-	}
-}
-
 // Handle maps a github event to an http.Handler.
-func (r *Router) Handle(event string, h http.Handler) *Route {
-	route := &Route{Secret: r.secret, event: event, handler: h}
-	r.routes[event] = route
-	return route
+func (r *Router) Handle(event string, h http.Handler) {
+	r.routes[event] = h
 }
 
 // HandleFunc maps a github event to an http.HandlerFunc.
-func (r *Router) HandleFunc(event string, fn func(http.ResponseWriter, *http.Request)) *Route {
-	return r.Handle(event, http.HandlerFunc(fn))
+func (r *Router) HandleFunc(event string, fn func(http.ResponseWriter, *http.Request)) {
+	r.Handle(event, http.HandlerFunc(fn))
 }
 
-// ServeHTTP implements the http.Handler interface.
+// HandleSecret maps a github event to a SecretHandler.
+func (r *Router) HandleSecret(event string, secret string, h http.Handler) *SecretHandler {
+	route := &SecretHandler{Secret: secret, Handler: h}
+	r.Handle(event, route)
+	return route
+}
+
+// ServeHTTP implements the http.Handler interface to route a request to an
+// appropriate http.Handler, based on the value of the X-GitHub-Event header.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	event := req.Header.Get(HeaderEvent)
 
@@ -89,20 +78,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if route == nil {
 		r.notFound(w, req)
 		return
-	}
-
-	// If a secret is provided, ensure that the request is verified.
-	if r.secret != "" {
-		sig, ok := IsAuthorized(req, route.Secret)
-
-		if r.SetHeader {
-			w.Header().Set("X-Calculated-Signature", sig)
-		}
-
-		if !ok {
-			r.unauthorized(w, req)
-			return
-		}
 	}
 
 	route.ServeHTTP(w, req)
@@ -116,29 +91,53 @@ func (r *Router) notFound(w http.ResponseWriter, req *http.Request) {
 	r.NotFoundHandler.ServeHTTP(w, req)
 }
 
-func (r *Router) unauthorized(w http.ResponseWriter, req *http.Request) {
-	if r.UnauthorizedHandler == nil {
-		r.UnauthorizedHandler = DefaultUnauthorizedHandler
-	}
-
-	r.UnauthorizedHandler.ServeHTTP(w, req)
-}
-
-// Route represents the http.Handler for a github event.
-type Route struct {
+// SecretHandler is an http.Handler that will verify the authenticity of the
+// request.
+type SecretHandler struct {
+	// The secret to use to verify the request.
 	Secret string
 
-	handler http.Handler
-	event   string
+	// SetHeader controls what happens when the X-Hub-Signature header value does
+	// not match the calculated signature. Setting this value to true will set
+	// the X-Calculated-Signature header in the response.
+	//
+	// It's recommended that you only enable this for debugging purposes.
+	SetHeader bool
+
+	// Handler is the http.Handler that will be called if the request is
+	// authorized.
+	Handler http.Handler
+
+	// Unauthorized is the http.Handler that will be called if the request
+	// is not authorized.
+	Unauthorized http.Handler
 }
 
 // ServeHTTP implements the http.Handler interface.
-func (r *Route) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.handler.ServeHTTP(w, req)
+func (h *SecretHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if h.Unauthorized == nil {
+		h.Unauthorized = DefaultUnauthorizedHandler
+	}
+
+	// If a secret is provided, ensure that the request is verified.
+	if h.Secret != "" {
+		sig, ok := IsAuthorized(req, h.Secret)
+
+		if h.SetHeader {
+			w.Header().Set("X-Calculated-Signature", sig)
+		}
+
+		if !ok {
+			h.Unauthorized.ServeHTTP(w, req)
+			return
+		}
+	}
+
+	h.Handler.ServeHTTP(w, req)
 }
 
-// routes maps a github event to a Route.
-type routes map[string]*Route
+// routes maps a github event to an http.Handler.
+type routes map[string]http.Handler
 
 // Signature calculates the SHA1 HMAC signature of body, signed by the secret.
 //

@@ -10,12 +10,6 @@ Hookshot is a Go http router that de-multiplexes and authorizes GitHub Webhooks.
 ```go
 r := hookshot.NewRouter()
 
-r.Handle("deployment", DeploymentHandler)
 r.Handle("deployment_status", DeploymentStatusHandler)
-```
-
-To automatically verify that the request came from GitHub using a secret:
-
-```go
-r := hookshot.NewRouterWithSecret("secret")
+r.HandleSecret("deployment", "secret", DeploymentHandler)
 ```
