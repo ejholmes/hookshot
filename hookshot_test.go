@@ -17,7 +17,7 @@ type payload struct {
 	event string `json:"event"`
 }
 
-func TestRouter(t *testing.T) {
+func TestRouterAuthorized(t *testing.T) {
 	tests := []struct {
 		secret    string
 		event     string
@@ -69,9 +69,9 @@ func TestRouter(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		router := NewRouter(tt.secret)
+		router := NewRouter()
 
-		router.HandleFunc("deployment", func(w http.ResponseWriter, r *http.Request) {
+		router.Handle("deployment", Authorize(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var p payload
 			err := json.NewDecoder(r.Body).Decode(&p)
 
@@ -81,7 +81,7 @@ func TestRouter(t *testing.T) {
 
 			w.WriteHeader(200)
 			w.Write([]byte("ok\n"))
-		})
+		}), tt.secret))
 
 		resp := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/", bytes.NewReader([]byte(tt.body)))
@@ -144,10 +144,10 @@ func TestSignature(t *testing.T) {
 }
 
 func ExampleRouterHandleFunc() {
-	r := NewRouter("secret")
-	r.HandleFunc("ping", func(w http.ResponseWriter, r *http.Request) {
+	r := NewRouter()
+	r.Handle("ping", Authorize(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`pong`))
-	})
+	}), "secret"))
 
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "", bytes.NewBufferString(`{"data":"foo"}`))
