@@ -58,6 +58,19 @@ func (c *Client) Trigger(event string, v interface{}) (*http.Response, error) {
 	return c.Do(req)
 }
 
+func (c *Client) Ping(v interface{}) (*http.Response, error) {
+	if v == nil {
+		v = struct {
+			Zen string `json:"zen"`
+		}{
+			Zen: "Practicality beats purity.",
+		}
+	}
+
+	return c.Trigger("ping", v)
+
+}
+
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
