@@ -11,7 +11,7 @@ type Deployment struct {
 			GistsURL          string `json:"gists_url"`
 			GravatarID        string `json:"gravatar_id"`
 			HTMLURL           string `json:"html_url"`
-			ID                int    `json:"id"`
+			ID                int64  `json:"id"`
 			Login             string `json:"login"`
 			OrganizationsURL  string `json:"organizations_url"`
 			ReceivedEventsURL string `json:"received_events_url"`
@@ -22,17 +22,17 @@ type Deployment struct {
 			Type              string `json:"type"`
 			URL               string `json:"url"`
 		} `json:"creator"`
-		Description   interface{} `json:"description"`
-		Environment   string      `json:"environment"`
-		ID            int         `json:"id"`
-		Payload       struct{}    `json:"payload"`
-		Ref           string      `json:"ref"`
-		RepositoryURL string      `json:"repository_url"`
-		Sha           string      `json:"sha"`
-		StatusesURL   string      `json:"statuses_url"`
-		Task          string      `json:"task"`
-		UpdatedAt     string      `json:"updated_at"`
-		URL           string      `json:"url"`
+		Description   string   `json:"description"`
+		Environment   string   `json:"environment"`
+		ID            int64    `json:"id"`
+		Payload       struct{} `json:"payload"`
+		Ref           string   `json:"ref"`
+		RepositoryURL string   `json:"repository_url"`
+		Sha           string   `json:"sha"`
+		StatusesURL   string   `json:"statuses_url"`
+		Task          string   `json:"task"`
+		UpdatedAt     string   `json:"updated_at"`
+		URL           string   `json:"url"`
 	} `json:"deployment"`
 	Repository struct {
 		ArchiveURL       string      `json:"archive_url"`
@@ -67,7 +67,7 @@ type Deployment struct {
 		Homepage         interface{} `json:"homepage"`
 		HooksURL         string      `json:"hooks_url"`
 		HTMLURL          string      `json:"html_url"`
-		ID               int         `json:"id"`
+		ID               int64       `json:"id"`
 		IssueCommentURL  string      `json:"issue_comment_url"`
 		IssueEventsURL   string      `json:"issue_events_url"`
 		IssuesURL        string      `json:"issues_url"`
@@ -90,7 +90,7 @@ type Deployment struct {
 			GistsURL          string `json:"gists_url"`
 			GravatarID        string `json:"gravatar_id"`
 			HTMLURL           string `json:"html_url"`
-			ID                int    `json:"id"`
+			ID                int64  `json:"id"`
 			Login             string `json:"login"`
 			OrganizationsURL  string `json:"organizations_url"`
 			ReceivedEventsURL string `json:"received_events_url"`
@@ -129,7 +129,7 @@ type Deployment struct {
 		GistsURL          string `json:"gists_url"`
 		GravatarID        string `json:"gravatar_id"`
 		HTMLURL           string `json:"html_url"`
-		ID                int    `json:"id"`
+		ID                int64  `json:"id"`
 		Login             string `json:"login"`
 		OrganizationsURL  string `json:"organizations_url"`
 		ReceivedEventsURL string `json:"received_events_url"`
