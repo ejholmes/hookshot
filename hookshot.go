@@ -136,6 +136,11 @@ func Authorize(h http.Handler, secret string) *SecretHandler {
 
 // ServeHTTP implements the http.Handler interface.
 func (h *SecretHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.ServeHTTPContext(context.Background(), w, req)
+	return
+}
+
+func (h *SecretHandler) ServeHTTPContext(ctx context.Context, w http.ResponseWriter, req *http.Request) error {
 	if h.Unauthorized == nil {
 		h.Unauthorized = DefaultUnauthorizedHandler
 	}
@@ -150,11 +155,16 @@ func (h *SecretHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		if !ok {
 			h.Unauthorized.ServeHTTP(w, req)
-			return
+			return nil
 		}
 	}
 
+	if handler, ok := h.Handler.(contextHandler); ok {
+		return handler.ServeHTTPContext(ctx, w, req)
+	}
+
 	h.Handler.ServeHTTP(w, req)
+	return nil
 }
 
 // Signature calculates the SHA1 HMAC signature of body, signed by the secret.
