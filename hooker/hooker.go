@@ -1,4 +1,4 @@
-// package hooker can generate github webhooks. It's only real use is for
+// Package hooker can generate github webhooks. It's only real use is for
 // testing endpoints that handle github webhooks.
 package hooker
 
@@ -11,8 +11,15 @@ import (
 	"net/http"
 
 	"github.com/ejholmes/hookshot"
+	"github.com/ejholmes/hookshot/events"
 )
 
+// DefaultPing is a Ping event that makes you feel good.
+var DefaultPing = events.Ping{
+	Zen: "Practicality beats purity.",
+}
+
+// Client represents a client that can send GitHub webhooks.
 type Client struct {
 	// Secret is a secret to sign request bodies with.
 	Secret string
@@ -23,6 +30,7 @@ type Client struct {
 	client *http.Client
 }
 
+// NewClient returns a new Client instance.
 func NewClient(c *http.Client) *Client {
 	if c == nil {
 		c = http.DefaultClient
@@ -33,6 +41,8 @@ func NewClient(c *http.Client) *Client {
 	}
 }
 
+// Trigger triggers a webhook event. The sha1 digest of v is calculated and
+// including in the X-Hub-Signature header.
 func (c *Client) Trigger(event string, v interface{}) (*http.Response, error) {
 	b := new(bytes.Buffer)
 
@@ -58,19 +68,12 @@ func (c *Client) Trigger(event string, v interface{}) (*http.Response, error) {
 	return c.Do(req)
 }
 
-func (c *Client) Ping(v interface{}) (*http.Response, error) {
-	if v == nil {
-		v = struct {
-			Zen string `json:"zen"`
-		}{
-			Zen: "Practicality beats purity.",
-		}
-	}
-
-	return c.Trigger("ping", v)
-
+// Ping sends a ping event.
+func (c *Client) Ping(p events.Ping) (*http.Response, error) {
+	return c.Trigger("ping", p)
 }
 
+// Do performs the request.
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
