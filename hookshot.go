@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"golang.org/x/net/context"
 )
 
 const (
@@ -73,8 +75,24 @@ func (r *Router) Handler(req *http.Request) http.Handler {
 // ServeHTTP implements the http.Handler interface to route a request to an
 // appropriate http.Handler, based on the value of the X-GitHub-Event header.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r.ServeHTTPContext(context.Background(), w, req)
+}
+
+// contextHandler is an http handler that can propagate a context.Context.
+type contextHandler interface {
+	ServeHTTPContext(context.Context, http.ResponseWriter, *http.Request) error
+}
+
+// ServeHTTPContext implements the httpx.Handler interface.
+func (r *Router) ServeHTTPContext(ctx context.Context, w http.ResponseWriter, req *http.Request) error {
 	h := r.Handler(req)
+
+	if h, ok := h.(contextHandler); ok {
+		return h.ServeHTTPContext(ctx, w, req)
+	}
+
 	h.ServeHTTP(w, req)
+	return nil
 }
 
 func (r *Router) notFoundHandler() http.Handler {
